@@ -4,14 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function StopwatchScreen() {
+export default function HomeScreen() {
+  // State definitions
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(0);
   const [accumulatedTime, setAccumulatedTime] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [laps, setLaps] = useState<number[]>([]);
 
-  // Load laps from AsyncStorage on mount
+  // Load laps from AsyncStorage when the component mounts
   useEffect(() => {
     const loadLaps = async () => {
       try {
@@ -24,9 +25,9 @@ export default function StopwatchScreen() {
       }
     };
     loadLaps();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
-  // Save laps to AsyncStorage whenever laps change
+  // Save laps to AsyncStorage whenever the laps state changes
   useEffect(() => {
     const saveLaps = async () => {
       try {
@@ -36,9 +37,9 @@ export default function StopwatchScreen() {
       }
     };
     saveLaps();
-  }, [laps]);
+  }, [laps]); // Runs whenever `laps` changes
 
-  // Timer update logic
+  // Effect to update the timer when running
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isRunning) {
@@ -70,17 +71,17 @@ export default function StopwatchScreen() {
     setIsRunning(false);
     setAccumulatedTime(0);
     setCurrentTime(0);
-    setLaps([]);
+    setLaps([]); // Clears laps, triggering the save effect
   };
 
   const recordLap = () => {
     if (isRunning) {
-      setLaps([...laps, currentTime]); // Add new lap to the end of the array
+      setLaps([...laps, currentTime]); // Adds new lap, triggering the save effect
     }
   };
 
   const clearLaps = () => {
-    setLaps([]);
+    setLaps([]); // Clears laps, triggering the save effect
   };
 
   // Format time into MM:SS.MS
@@ -96,30 +97,63 @@ export default function StopwatchScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.mainContainer}>
-        {/* Fixed Timer and Controls Section */}
-        <View style={styles.timerAndControls}>
-          <Text style={styles.timer}>{formatTime(currentTime)}</Text>
-          <View style={styles.buttonContainer}>
-            <Pressable style={styles.button} onPress={start}>
-              <Ionicons name="play" size={24} color="#fff" />
-            </Pressable>
-            <Pressable style={styles.button} onPress={pause}>
-              <Ionicons name="pause" size={24} color="#fff" />
-            </Pressable>
-            <Pressable style={styles.button} onPress={stop}>
-              <Ionicons name="stop" size={24} color="#fff" />
-            </Pressable>
-            <Pressable style={styles.button} onPress={recordLap}>
-              <Ionicons name="flag" size={24} color="#fff" />
-            </Pressable>
-          </View>
-          <Pressable style={styles.clearButton} onPress={clearLaps}>
-            <Text style={styles.clearButtonText}>Clear Laps</Text>
+        {/* Timer Display */}
+        <View style={styles.timerContainer}>
+          <Text
+            style={styles.timer}
+            numberOfLines={1}
+            adjustsFontSizeToFit={true}
+            minimumFontScale={0.5}
+          >
+            {formatTime(currentTime)}
+          </Text>
+        </View>
+
+        {/* Control Buttons */}
+        <View style={styles.buttonContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              pressed && { transform: [{ scale: 1.05 }] },
+            ]}
+            onPress={start}
+          >
+            <Ionicons name="play" size={24} color="#fff" />
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              pressed && { transform: [{ scale: 1.05 }] },
+            ]}
+            onPress={pause}
+          >
+            <Ionicons name="pause" size={24} color="#fff" />
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              pressed && { transform: [{ scale: 1.05 }] },
+            ]}
+            onPress={stop}
+          >
+            <Ionicons name="stop" size={24} color="#fff" />
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              pressed && { transform: [{ scale: 1.05 }] },
+            ]}
+            onPress={recordLap}
+          >
+            <Ionicons name="flag" size={24} color="#fff" />
           </Pressable>
         </View>
 
-        {/* Scrollable Lap List */}
+        {/* Lap List */}
         <ScrollView style={styles.lapsContainer}>
+          <Pressable style={styles.clearButton} onPress={clearLaps}>
+            <Text style={styles.clearButtonText}>Clear Laps</Text>
+          </Pressable>
           {laps.map((lap, index) => (
             <View
               key={index}
@@ -139,35 +173,35 @@ export default function StopwatchScreen() {
   );
 }
 
-// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212', // Dark background
   },
   mainContainer: {
     flex: 1,
-    justifyContent: 'flex-start', // Align content at the top
-    alignItems: 'center',
-    paddingTop: 20,
+    padding: 24,
+    backgroundColor: '#121212', // Dark theme background
   },
-  timerAndControls: {
+  timerContainer: {
+    width: '100%',
     alignItems: 'center',
     marginBottom: 20,
   },
   timer: {
     fontSize: 64,
     fontWeight: '600',
-    color: '#fff',
+    color: '#fff', // White timer text
     textAlign: 'center',
     fontFamily: 'monospace',
-    marginBottom: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   button: {
     backgroundColor: '#333333',
@@ -183,20 +217,19 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  lapsContainer: {
+    width: '100%',
+  },
   clearButton: {
     backgroundColor: '#ff4d4d',
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
-    width: '80%',
+    marginBottom: 10,
   },
   clearButtonText: {
     color: '#fff',
     fontSize: 16,
-  },
-  lapsContainer: {
-    width: '100%',
-    flex: 1, // Takes remaining space
   },
   lapItem: {
     paddingVertical: 10,
